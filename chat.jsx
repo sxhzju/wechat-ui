@@ -68,6 +68,31 @@ const CHAT_ITEMS = [
     type: 'text',
     from: ROLE_CHAT_PARTNER,
     text: '视频已生成好，利用默认的720p渲染，如果你要，我可以再生成一个1080p的'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '先不用加滚动，我先看一下超出聊天区域会怎么表现'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '这里继续补一条消息做长度测试'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '再补一条，观察底部输入框和消息区是否会重叠'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '如果内容继续变长，应该能看到当前容器的极限状态'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '最后再来一条，方便你确认没有 scroll 特性时的表现'
   }
 ];
 
