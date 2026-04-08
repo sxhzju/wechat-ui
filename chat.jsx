@@ -23,6 +23,13 @@ const STREAM_REVEAL_SECONDS = 0.14;
 const STREAM_SPEED_MULTIPLIER = 1.5;
 const ROLE_SELF = 'self';
 const ROLE_CHAT_PARTNER = 'chatPartner';
+const SCREEN_WIDTH = 390;
+const HEADER_HEIGHT = 49;
+const COMPOSER_HEIGHT = 82;
+const MESSAGE_VIEWPORT_HEIGHT = 660;
+const SCREEN_HEIGHT = HEADER_HEIGHT + MESSAGE_VIEWPORT_HEIGHT + COMPOSER_HEIGHT;
+const DEFAULT_VOICE_WAVE_STROKE_WIDTH = 0.55;
+const DEFAULT_VOICE_WAVE_SPACING = 1.03;
 
 const CHAT_PARTICIPANTS = {
   [ROLE_SELF]: {
@@ -63,6 +70,31 @@ const CHAT_ITEMS = [
     type: 'text',
     from: ROLE_CHAT_PARTNER,
     text: '视频已生成好，利用默认的720p渲染，如果你要，我可以再生成一个1080p的'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '先不用加滚动，我先看一下超出聊天区域会怎么表现'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '这里继续补一条消息做长度测试'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '再补一条，观察底部输入框和消息区是否会重叠'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '如果内容继续变长，应该能看到当前容器的极限状态'
+  },
+  {
+    type: 'text',
+    from: ROLE_SELF,
+    text: '最后再来一条，方便你确认没有 scroll 特性时的表现'
   }
 ];
 
@@ -272,10 +304,95 @@ const ChatHeader = ({ chatPartnerName }) => {
   );
 
   return (
-    <div className="bg-[#ededed] border-b border-gray-300 px-4 py-3 flex items-center justify-between sticky top-0 z-10 relative">
+    <div className="bg-[#ededed] border-b border-gray-300 px-4 py-3 flex items-center justify-between relative">
       {backButton}
       <span className="absolute left-1/2 -translate-x-1/2 text-lg font-medium">{chatPartnerName}</span>
       {moreActionsButton}
+    </div>
+  );
+};
+
+const ChatComposer = () => {
+  const offset1 = (94 - 110.85) * DEFAULT_VOICE_WAVE_SPACING + 110.85;
+  const offset2 = 118.4;
+  const offset3 = (135.4 - 110.85) * DEFAULT_VOICE_WAVE_SPACING + 110.85;
+  
+  const microphoneButton = (
+    <svg className="w-7 h-7 text-[#2f2f2f]" fill="none" viewBox="0 0 24 24" aria-hidden="true" style={{ shapeRendering: 'geometricPrecision' }}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="m86.31 121.6 15.67-15.4c4.84 3.96 5.45 10.65 5.45 15.4 0 6.28-2.72 11.13-5.45 14.5l-15.67-14.5z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth={DEFAULT_VOICE_WAVE_STROKE_WIDTH}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        transform={`translate(${offset1 - 94}, 0) scale(0.096)`}
+        vectorEffect="non-scaling-stroke"
+      />
+      <path
+        d="m118.4 89.46-7.13 7.6c7.63 8.02 10.51 16.19 10.51 24.68 0 10.03-4.84 19.14-10.51 25.17l7.5 7.34c9.95-10.28 13.1-21.51 13.1-32.51 0-12.89-5.92-25.13-13.47-32.28z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth={DEFAULT_VOICE_WAVE_STROKE_WIDTH}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        transform={`translate(${offset2 - 118.4}, 0) scale(0.096)`}
+        vectorEffect="non-scaling-stroke"
+      />
+      <path
+        d="m135.4 71.21-7.54 7.9c11.83 12.62 18.09 25.51 18.09 42.5 0 15.55-7.01 31.37-17.89 43.71l7.54 6.4c13.49-13.96 20.9-30.11 20.9-50.11 0-18.7-7.62-36.59-21.1-50.4z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth={DEFAULT_VOICE_WAVE_STROKE_WIDTH}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        transform={`translate(${offset3 - 135.4}, 0) scale(0.096)`}
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  );
+
+  const emojiButton = (
+    <svg className="w-7 h-7 text-[#2f2f2f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" strokeWidth="1.7" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2.8"
+        d="M8.5 8.5v.01M15.5 8.5v.01"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+        d="M7 12.5h10a5 5 0 0 1-10 0z"
+      />
+    </svg>
+  );
+
+  const plusButton = (
+    <svg className="w-7 h-7 text-[#2f2f2f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" strokeWidth="1.7" />
+      <path strokeLinecap="round" strokeWidth="1.7" d="M12 8v8M8 12h8" />
+    </svg>
+  );
+
+  return (
+    <div
+      className="shrink-0 bg-[#f7f7f7] px-3 pt-2.5 pb-4 flex items-start gap-2"
+      style={{ height: COMPOSER_HEIGHT }}
+    >
+      <button type="button" className="mt-[5px] shrink-0" aria-label="语音输入">
+        {microphoneButton}
+      </button>
+      <div className="mt-[-1px] h-10 flex-1 rounded-md bg-white shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)]" />
+      <button type="button" className="mt-[5px] shrink-0" aria-label="表情">
+        {emojiButton}
+      </button>
+      <button type="button" className="mt-[5px] shrink-0" aria-label="更多功能">
+        {plusButton}
+      </button>
     </div>
   );
 };
@@ -404,6 +521,7 @@ function App() {
   const remotionFrame = remotionApi?.useCurrentFrame ? remotionApi.useCurrentFrame() : null;
   const videoConfig = remotionApi?.useVideoConfig ? remotionApi.useVideoConfig() : null;
   const fps = videoConfig?.fps || DEFAULT_FPS;
+  const messageListRef = useRef(null);
 
   const CHAT_TIMELINE = useMemo(() => buildTimeline(CHAT_ITEMS, fps), [fps]);
   const [previewFrame, setPreviewFrame] = useState(0);
@@ -438,20 +556,56 @@ function App() {
       return slot ? currentFrame >= slot.startFrame : false;
     });
 
-  return (
-    <div className="w-[390px] mx-auto min-h-screen bg-[#ededed] font-sans text-gray-800 flex flex-col relative shadow-sm border-x border-gray-200">
-      <ChatHeader chatPartnerName={CHAT_PARTNER_NAME} />
+  useEffect(() => {
+    const messageListElement = messageListRef.current;
 
-      <div className="flex-1 p-4 space-y-6 overflow-y-auto">
-        {visibleItems.map((entry) => (
-          <ChatItem
-            key={`${entry.item.type}-${entry.originalIndex}`}
-            item={entry.item}
-            slot={CHAT_TIMELINE.messageTimeline.get(entry.originalIndex)}
-            currentFrame={currentFrame}
-            fps={fps}
-          />
-        ))}
+    if (!messageListElement) {
+      return;
+    }
+
+    // Always derive scroll position from current rendered content so each frame is independent.
+    messageListElement.scrollTop = messageListElement.scrollHeight;
+  }, [currentFrame, visibleItems.length]);
+
+  return (
+    <div
+      className="mx-auto relative"
+      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+    >
+      <div
+        className="ml-auto bg-[#ededed] font-sans text-gray-800 relative shadow-sm border-x border-gray-200 overflow-hidden"
+        style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+      >
+        <div
+          ref={messageListRef}
+          className="absolute inset-0 z-0 overflow-y-auto hide-scrollbar"
+          style={{
+            paddingTop: HEADER_HEIGHT + 16,
+            paddingBottom: COMPOSER_HEIGHT + 16,
+            paddingLeft: 16,
+            paddingRight: 16
+          }}
+        >
+          <div className="space-y-6">
+            {visibleItems.map((entry) => (
+              <ChatItem
+                key={`${entry.item.type}-${entry.originalIndex}`}
+                item={entry.item}
+                slot={CHAT_TIMELINE.messageTimeline.get(entry.originalIndex)}
+                currentFrame={currentFrame}
+                fps={fps}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="absolute top-0 left-0 right-0 z-20">
+          <ChatHeader chatPartnerName={CHAT_PARTNER_NAME} />
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          <ChatComposer />
+        </div>
       </div>
     </div>
   );
