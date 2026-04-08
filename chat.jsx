@@ -329,19 +329,19 @@ const ChatComposer = ({ voiceWaveStrokeWidth, voiceWaveSpacing }) => {
   );
 
   const emojiButton = (
-    <svg className="w-8 h-8 text-[#2f2f2f]" fill="none" viewBox="0 0 48 48">
+    <svg className="w-7 h-7 text-[#2f2f2f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" strokeWidth="1.7" />
       <path
-        d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20Z"
-        stroke="currentColor"
-        strokeWidth="4"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M31 18v1m-14-1v1m14 12s-2 4-7 4s-7-4-7-4"
-        stroke="currentColor"
-        strokeWidth="4"
         strokeLinecap="round"
         strokeLinejoin="round"
+        strokeWidth="2.8"
+        d="M8.5 8.5v.01M15.5 8.5v.01"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+        d="M7 12.5h10a5 5 0 0 1-10 0z"
       />
     </svg>
   );
@@ -355,17 +355,17 @@ const ChatComposer = ({ voiceWaveStrokeWidth, voiceWaveSpacing }) => {
 
   return (
     <div
-      className="shrink-0 border-t border-[#d9d9d9] bg-[#f7f7f7] px-3 pt-2.5 pb-4 flex items-start gap-2"
+      className="shrink-0 bg-[#f7f7f7] px-3 pt-2.5 pb-4 flex items-start gap-2"
       style={{ height: COMPOSER_HEIGHT }}
     >
-      <button type="button" className="mt-2 shrink-0" aria-label="语音输入">
+      <button type="button" className="mt-[5px] shrink-0" aria-label="语音输入">
         {microphoneButton}
       </button>
-      <div className="mt-0.5 h-10 flex-1 rounded-md bg-white shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)]" />
-      <button type="button" className="mt-2 shrink-0" aria-label="表情">
+      <div className="mt-[-1px] h-10 flex-1 rounded-md bg-white shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)]" />
+      <button type="button" className="mt-[5px] shrink-0" aria-label="表情">
         {emojiButton}
       </button>
-      <button type="button" className="mt-2 shrink-0" aria-label="更多功能">
+      <button type="button" className="mt-[5px] shrink-0" aria-label="更多功能">
         {plusButton}
       </button>
     </div>
