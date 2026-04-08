@@ -21,14 +21,16 @@ const STREAM_MIN_SECONDS = 0.4;
 const STREAM_MAX_SECONDS = 0.9;
 const STREAM_REVEAL_SECONDS = 0.14;
 const STREAM_SPEED_MULTIPLIER = 1.5;
+const ROLE_SELF = 'self';
+const ROLE_CHAT_PARTNER = 'chatPartner';
 
 const CHAT_PARTICIPANTS = {
-  self: {
+  [ROLE_SELF]: {
     name: '猫学长',
     avatar: './assets/mxz-avatar.jpg',
     avatarClass: 'shadow-sm object-cover'
   },
-  chatPartner: {
+  [ROLE_CHAT_PARTNER]: {
     name: '龙虾',
     avatar: './assets/lobster-avatar.svg',
     avatarClass: 'bg-white shadow-sm'
@@ -42,24 +44,24 @@ const CHAT_ITEMS = [
   },
   {
     type: 'text',
-    from: 'self',
+    from: ROLE_SELF,
     text: '生成视频：在claude code中打入提示词"vibe motion真好玩!"'
   },
   {
     type: 'text',
-    from: 'chatPartner',
+    from: ROLE_CHAT_PARTNER,
     text: '我会用claude-typer这个技能来生成视频'
   },
   {
     type: 'video',
-    from: 'chatPartner',
+    from: ROLE_CHAT_PARTNER,
     coverUrl: './assets/lobster-video-cover.jpg',
     duration: '0:02',
     orientation: 'square'
   },
   {
     type: 'text',
-    from: 'chatPartner',
+    from: ROLE_CHAT_PARTNER,
     text: '视频已生成好，利用默认的720p渲染，如果你要，我可以再生成一个1080p的'
   }
 ];
@@ -75,8 +77,12 @@ const easeOutBack = (value) => {
   return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
 };
 
+const isSelfMessage = (item) => item.from === ROLE_SELF;
+
+const usesStreamingTextMotion = (item) => item.from === ROLE_CHAT_PARTNER && item.type === 'text';
+
 const getMotionSeconds = (item) => {
-  if (item.from === 'chatPartner' && item.type === 'text') {
+  if (usesStreamingTextMotion(item)) {
     const charCount = Array.from(item.text || '').length;
     const baseStreamSeconds = clamp(charCount * STREAM_CHAR_SECONDS, STREAM_MIN_SECONDS, STREAM_MAX_SECONDS);
     return baseStreamSeconds / STREAM_SPEED_MULTIPLIER;
@@ -282,8 +288,6 @@ const TimeStamp = ({ label }) => (
   </div>
 );
 
-const isSelfMessage = (item) => item.from === 'self';
-
 const Avatar = ({ profile }) => (
   <img
     src={profile.avatar}
@@ -342,7 +346,7 @@ const ChatItem = ({ item, slot, currentFrame, fps }) => {
     return null;
   }
 
-  if (item.from === 'chatPartner' && item.type === 'text') {
+  if (usesStreamingTextMotion(item)) {
     const progress = getFrameProgress(currentFrame, slot.startFrame, slot.motionFrames);
     const textChars = Array.from(item.text || '');
     const visibleCount = Math.floor(progress * textChars.length);
