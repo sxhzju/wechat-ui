@@ -23,6 +23,9 @@ const STREAM_REVEAL_SECONDS = 0.14;
 const STREAM_SPEED_MULTIPLIER = 1.5;
 const ROLE_SELF = 'self';
 const ROLE_CHAT_PARTNER = 'chatPartner';
+const SCREEN_WIDTH = 390;
+const SCREEN_HEIGHT = 845;
+const COMPOSER_HEIGHT = 82;
 
 const CHAT_PARTICIPANTS = {
   [ROLE_SELF]: {
@@ -280,6 +283,70 @@ const ChatHeader = ({ chatPartnerName }) => {
   );
 };
 
+const ChatComposer = () => {
+  const microphoneButton = (
+    <svg className="w-8 h-8 text-[#2f2f2f]" fill="none" viewBox="0 0 48 48">
+      <path
+        d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20Z"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinejoin="round"
+      />
+      <path d="M17 25.9a2 2 0 1 0 0-4a2 2 0 0 0 0 4" fill="currentColor" />
+      <path
+        d="M21.95 28.85A6.98 6.98 0 0 0 24 23.9a6.98 6.98 0 0 0-2.05-4.95m4.95 14.849a13.96 13.96 0 0 0 4.1-9.9c0-3.866-1.567-7.366-4.1-9.899"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+
+  const emojiButton = (
+    <svg className="w-8 h-8 text-[#2f2f2f]" fill="none" viewBox="0 0 48 48">
+      <path
+        d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20Z"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M31 18v1m-14-1v1m14 12s-2 4-7 4s-7-4-7-4"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+
+  const plusButton = (
+    <svg className="w-7 h-7 text-[#2f2f2f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" strokeWidth="1.7" />
+      <path strokeLinecap="round" strokeWidth="1.7" d="M12 8v8M8 12h8" />
+    </svg>
+  );
+
+  return (
+    <div
+      className="shrink-0 border-t border-[#d9d9d9] bg-[#f7f7f7] px-3 pt-2.5 pb-4 flex items-start gap-2"
+      style={{ height: COMPOSER_HEIGHT }}
+    >
+      <button type="button" className="mt-2 shrink-0" aria-label="语音输入">
+        {microphoneButton}
+      </button>
+      <div className="mt-0.5 h-10 flex-1 rounded-md bg-white shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)]" />
+      <button type="button" className="mt-2 shrink-0" aria-label="表情">
+        {emojiButton}
+      </button>
+      <button type="button" className="mt-2 shrink-0" aria-label="更多功能">
+        {plusButton}
+      </button>
+    </div>
+  );
+};
+
 const TimeStamp = ({ label }) => (
   <div className="text-center -mb-[6px]">
     <span className="text-[13px] leading-[18px] text-[#9b9b9b] px-2 py-[3px] rounded">
@@ -439,7 +506,10 @@ function App() {
     });
 
   return (
-    <div className="w-[390px] mx-auto min-h-screen bg-[#ededed] font-sans text-gray-800 flex flex-col relative shadow-sm border-x border-gray-200">
+    <div
+      className="mx-auto bg-[#ededed] font-sans text-gray-800 flex flex-col relative shadow-sm border-x border-gray-200 overflow-hidden"
+      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+    >
       <ChatHeader chatPartnerName={CHAT_PARTNER_NAME} />
 
       <div className="flex-1 p-4 space-y-6 overflow-y-auto">
@@ -453,6 +523,8 @@ function App() {
           />
         ))}
       </div>
+
+      <ChatComposer />
     </div>
   );
 }
