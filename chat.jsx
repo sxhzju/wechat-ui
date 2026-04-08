@@ -25,6 +25,7 @@ const ROLE_SELF = 'self';
 const ROLE_CHAT_PARTNER = 'chatPartner';
 const SCREEN_WIDTH = 390;
 const SCREEN_HEIGHT = 845;
+const HEADER_HEIGHT = 49;
 const COMPOSER_HEIGHT = 82;
 const DEFAULT_VOICE_WAVE_STROKE_WIDTH = 0.55;
 const DEFAULT_VOICE_WAVE_SPACING = 1.03;
@@ -302,7 +303,7 @@ const ChatHeader = ({ chatPartnerName }) => {
   );
 
   return (
-    <div className="bg-[#ededed] border-b border-gray-300 px-4 py-3 flex items-center justify-between sticky top-0 z-10 relative">
+    <div className="bg-[#ededed] border-b border-gray-300 px-4 py-3 flex items-center justify-between relative">
       {backButton}
       <span className="absolute left-1/2 -translate-x-1/2 text-lg font-medium">{chatPartnerName}</span>
       {moreActionsButton}
@@ -519,6 +520,7 @@ function App() {
   const remotionFrame = remotionApi?.useCurrentFrame ? remotionApi.useCurrentFrame() : null;
   const videoConfig = remotionApi?.useVideoConfig ? remotionApi.useVideoConfig() : null;
   const fps = videoConfig?.fps || DEFAULT_FPS;
+  const messageListRef = useRef(null);
 
   const CHAT_TIMELINE = useMemo(() => buildTimeline(CHAT_ITEMS, fps), [fps]);
   const [previewFrame, setPreviewFrame] = useState(0);
@@ -553,19 +555,37 @@ function App() {
       return slot ? currentFrame >= slot.startFrame : false;
     });
 
+  useEffect(() => {
+    const messageListElement = messageListRef.current;
+
+    if (!messageListElement) {
+      return;
+    }
+
+    // Always derive scroll position from current rendered content so each frame is independent.
+    messageListElement.scrollTop = messageListElement.scrollHeight;
+  }, [currentFrame, visibleItems.length]);
+
   return (
     <div
       className="mx-auto relative"
       style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
     >
       <div
-        className="ml-auto bg-[#ededed] font-sans text-gray-800 flex flex-col relative shadow-sm border-x border-gray-200 overflow-hidden"
+        className="ml-auto bg-[#ededed] font-sans text-gray-800 relative shadow-sm border-x border-gray-200 overflow-hidden"
         style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
       >
-        <ChatHeader chatPartnerName={CHAT_PARTNER_NAME} />
-
-        <div className="flex-1">
-          <div className="h-full p-4 space-y-6 overflow-y-auto">
+        <div
+          ref={messageListRef}
+          className="absolute inset-0 z-0 overflow-y-auto"
+          style={{
+            paddingTop: HEADER_HEIGHT + 16,
+            paddingBottom: COMPOSER_HEIGHT + 16,
+            paddingLeft: 16,
+            paddingRight: 16
+          }}
+        >
+          <div className="space-y-6">
             {visibleItems.map((entry) => (
               <ChatItem
                 key={`${entry.item.type}-${entry.originalIndex}`}
@@ -578,7 +598,13 @@ function App() {
           </div>
         </div>
 
-        <ChatComposer />
+        <div className="absolute top-0 left-0 right-0 z-20">
+          <ChatHeader chatPartnerName={CHAT_PARTNER_NAME} />
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          <ChatComposer />
+        </div>
       </div>
     </div>
   );
