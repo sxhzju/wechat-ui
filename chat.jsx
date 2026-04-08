@@ -22,13 +22,13 @@ const STREAM_MAX_SECONDS = 0.9;
 const STREAM_REVEAL_SECONDS = 0.14;
 const STREAM_SPEED_MULTIPLIER = 1.5;
 
-const PROFILES = {
-  maoXueZhang: {
+const CHAT_PARTICIPANTS = {
+  self: {
     name: '猫学长',
     avatar: './assets/mxz-avatar.jpg',
     avatarClass: 'shadow-sm object-cover'
   },
-  longXia: {
+  chatPartner: {
     name: '龙虾',
     avatar: './assets/lobster-avatar.svg',
     avatarClass: 'bg-white shadow-sm'
@@ -42,28 +42,29 @@ const CHAT_ITEMS = [
   },
   {
     type: 'text',
-    from: 'maoXueZhang',
-    isSelf: true,
+    from: 'self',
     text: '生成视频：在claude code中打入提示词"vibe motion真好玩!"'
   },
   {
     type: 'text',
-    from: 'longXia',
+    from: 'chatPartner',
     text: '我会用claude-typer这个技能来生成视频'
   },
   {
     type: 'video',
-    from: 'longXia',
+    from: 'chatPartner',
     coverUrl: './assets/lobster-video-cover.jpg',
     duration: '0:02',
     orientation: 'square'
   },
   {
     type: 'text',
-    from: 'longXia',
+    from: 'chatPartner',
     text: '视频已生成好，利用默认的720p渲染，如果你要，我可以再生成一个1080p的'
   }
 ];
+
+const CHAT_PARTNER_NAME = '猫学长的龙虾';
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -75,7 +76,7 @@ const easeOutBack = (value) => {
 };
 
 const getMotionSeconds = (item) => {
-  if (item.from === 'longXia' && item.type === 'text') {
+  if (item.from === 'chatPartner' && item.type === 'text') {
     const charCount = Array.from(item.text || '').length;
     const baseStreamSeconds = clamp(charCount * STREAM_CHAR_SECONDS, STREAM_MIN_SECONDS, STREAM_MAX_SECONDS);
     return baseStreamSeconds / STREAM_SPEED_MULTIPLIER;
@@ -246,12 +247,14 @@ const WeChatVideoMessage = ({ coverUrl, duration, orientation = 'square' }) => {
   );
 };
 
-const TopBar = () => (
-  <div className="bg-[#ededed] border-b border-gray-300 px-4 py-3 flex items-center justify-between sticky top-0 z-10 relative">
+const ChatHeader = ({ chatPartnerName }) => {
+  const backButton = (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
     </svg>
-    <span className="absolute left-1/2 -translate-x-1/2 text-lg font-medium">猫学长的龙虾</span>
+  );
+
+  const moreActionsButton = (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
@@ -260,8 +263,16 @@ const TopBar = () => (
         d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
       />
     </svg>
-  </div>
-);
+  );
+
+  return (
+    <div className="bg-[#ededed] border-b border-gray-300 px-4 py-3 flex items-center justify-between sticky top-0 z-10 relative">
+      {backButton}
+      <span className="absolute left-1/2 -translate-x-1/2 text-lg font-medium">{chatPartnerName}</span>
+      {moreActionsButton}
+    </div>
+  );
+};
 
 const TimeStamp = ({ label }) => (
   <div className="text-center -mb-[6px]">
@@ -270,6 +281,8 @@ const TimeStamp = ({ label }) => (
     </span>
   </div>
 );
+
+const isSelfMessage = (item) => item.from === 'self';
 
 const Avatar = ({ profile }) => (
   <img
@@ -293,9 +306,10 @@ const TextBubble = ({ text, isSelf = false, children = null }) => {
 };
 
 const MessageRow = ({ item, children }) => {
-  const profile = PROFILES[item.from];
-  const directionClass = item.isSelf ? 'flex-row-reverse' : '';
-  const alignClass = item.isSelf ? 'items-end' : '';
+  const profile = CHAT_PARTICIPANTS[item.from];
+  const isSelf = isSelfMessage(item);
+  const directionClass = isSelf ? 'flex-row-reverse' : '';
+  const alignClass = isSelf ? 'items-end' : '';
 
   return (
     <div className={`flex gap-3 max-w-full ${directionClass}`}>
@@ -310,11 +324,12 @@ const getPopStyle = (item, slot, currentFrame, fps) => {
   const eased = easeOutBack(progress);
   const baseScale = 0.86;
   const scale = baseScale + (1 - baseScale) * eased;
+  const isSelf = isSelfMessage(item);
 
   return {
     opacity: progress,
     transform: `scale(${scale})`,
-    transformOrigin: item.isSelf ? 'right center' : 'left center'
+    transformOrigin: isSelf ? 'right center' : 'left center'
   };
 };
 
@@ -327,7 +342,7 @@ const ChatItem = ({ item, slot, currentFrame, fps }) => {
     return null;
   }
 
-  if (item.from === 'longXia' && item.type === 'text') {
+  if (item.from === 'chatPartner' && item.type === 'text') {
     const progress = getFrameProgress(currentFrame, slot.startFrame, slot.motionFrames);
     const textChars = Array.from(item.text || '');
     const visibleCount = Math.floor(progress * textChars.length);
@@ -346,7 +361,7 @@ const ChatItem = ({ item, slot, currentFrame, fps }) => {
         }}
       >
         <MessageRow item={item}>
-          <TextBubble isSelf={item.isSelf}>
+          <TextBubble isSelf={isSelfMessage(item)}>
             <span>{visibleText}</span>
           </TextBubble>
         </MessageRow>
@@ -358,7 +373,7 @@ const ChatItem = ({ item, slot, currentFrame, fps }) => {
     return (
       <div style={getPopStyle(item, slot, currentFrame, fps)}>
         <MessageRow item={item}>
-          <TextBubble text={item.text} isSelf={item.isSelf} />
+          <TextBubble text={item.text} isSelf={isSelfMessage(item)} />
         </MessageRow>
       </div>
     );
@@ -421,7 +436,7 @@ function App() {
 
   return (
     <div className="w-[390px] mx-auto min-h-screen bg-[#ededed] font-sans text-gray-800 flex flex-col relative shadow-sm border-x border-gray-200">
-      <TopBar />
+      <ChatHeader chatPartnerName={CHAT_PARTNER_NAME} />
 
       <div className="flex-1 p-4 space-y-6 overflow-y-auto">
         {visibleItems.map((entry) => (
