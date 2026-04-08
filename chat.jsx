@@ -26,9 +26,10 @@ const ROLE_CHAT_PARTNER = 'chatPartner';
 const SCREEN_WIDTH = 390;
 const SCREEN_HEIGHT = 845;
 const COMPOSER_HEIGHT = 82;
-const DEFAULT_VOICE_WAVE_STROKE_WIDTH = 0.35;
+const DEFAULT_VOICE_WAVE_STROKE_WIDTH = 0.55;
+const DEFAULT_VOICE_WAVE_SPACING = 1.03;
 const VOICE_WAVE_CONTROL_GUTTER = 176;
-const VOICE_WAVE_CONTROL_LEFT = 96;
+const VOICE_WAVE_CONTROL_LEFT = 80;
 
 const CHAT_PARTICIPANTS = {
   [ROLE_SELF]: {
@@ -286,9 +287,13 @@ const ChatHeader = ({ chatPartnerName }) => {
   );
 };
 
-const ChatComposer = ({ voiceWaveStrokeWidth }) => {
+const ChatComposer = ({ voiceWaveStrokeWidth, voiceWaveSpacing }) => {
+  const offset1 = (94 - 110.85) * voiceWaveSpacing + 110.85;
+  const offset2 = 118.4;
+  const offset3 = (135.4 - 110.85) * voiceWaveSpacing + 110.85;
+  
   const microphoneButton = (
-    <svg className="w-7 h-7 text-[#2f2f2f]" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="w-7 h-7 text-[#2f2f2f]" fill="none" viewBox="0 0 24 24" aria-hidden="true" style={{ shapeRendering: 'geometricPrecision' }}>
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" />
       <path
         d="m86.31 121.6 15.67-15.4c4.84 3.96 5.45 10.65 5.45 15.4 0 6.28-2.72 11.13-5.45 14.5l-15.67-14.5z"
@@ -297,7 +302,7 @@ const ChatComposer = ({ voiceWaveStrokeWidth }) => {
         strokeWidth={voiceWaveStrokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        transform="scale(0.096)"
+        transform={`translate(${offset1 - 94}, 0) scale(0.096)`}
         vectorEffect="non-scaling-stroke"
       />
       <path
@@ -307,7 +312,7 @@ const ChatComposer = ({ voiceWaveStrokeWidth }) => {
         strokeWidth={voiceWaveStrokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        transform="scale(0.096)"
+        transform={`translate(${offset2 - 118.4}, 0) scale(0.096)`}
         vectorEffect="non-scaling-stroke"
       />
       <path
@@ -317,7 +322,7 @@ const ChatComposer = ({ voiceWaveStrokeWidth }) => {
         strokeWidth={voiceWaveStrokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        transform="scale(0.096)"
+        transform={`translate(${offset3 - 135.4}, 0) scale(0.096)`}
         vectorEffect="non-scaling-stroke"
       />
     </svg>
@@ -367,23 +372,41 @@ const ChatComposer = ({ voiceWaveStrokeWidth }) => {
   );
 };
 
-const VoiceWaveControl = ({ value, onChange }) => (
+const VoiceWaveControl = ({ strokeWidth, spacing, onStrokeWidthChange, onSpacingChange }) => (
   <div className="rounded-2xl border border-white/80 bg-white/84 px-2 py-3 shadow-[0_8px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm">
-    <div className="flex flex-col items-center gap-2">
-      <span className="text-[11px] leading-none text-[#8a8a8a] whitespace-nowrap">波宽</span>
-      <div className="relative h-24 w-7 flex items-center justify-center">
-        <input
-          type="range"
-          min="0"
-          max="1.2"
-          step="0.05"
-          value={value}
-          onChange={(event) => onChange(Number(event.target.value))}
-          aria-label="声波粗细"
-          className="absolute w-24 -rotate-90 accent-[#2f2f2f]"
-        />
+    <div className="flex gap-4">
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-[11px] leading-none text-[#8a8a8a] whitespace-nowrap">粗细</span>
+        <div className="relative h-24 w-7 flex items-center justify-center">
+          <input
+            type="range"
+            min="0"
+            max="1.2"
+            step="0.05"
+            value={strokeWidth}
+            onChange={(event) => onStrokeWidthChange(Number(event.target.value))}
+            aria-label="声波粗细"
+            className="absolute w-24 -rotate-90 accent-[#2f2f2f]"
+          />
+        </div>
+        <span className="min-w-[32px] text-center text-[11px] leading-none tabular-nums text-[#4a4a4a]">{strokeWidth.toFixed(2)}</span>
       </div>
-      <span className="min-w-[32px] text-center text-[11px] leading-none tabular-nums text-[#4a4a4a]">{value.toFixed(2)}</span>
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-[11px] leading-none text-[#8a8a8a] whitespace-nowrap">间距</span>
+        <div className="relative h-24 w-7 flex items-center justify-center">
+          <input
+            type="range"
+            min="0.5"
+            max="2"
+            step="0.01"
+            value={spacing}
+            onChange={(event) => onSpacingChange(Number(event.target.value))}
+            aria-label="声波间距"
+            className="absolute w-24 -rotate-90 accent-[#2f2f2f]"
+          />
+        </div>
+        <span className="min-w-[32px] text-center text-[11px] leading-none tabular-nums text-[#4a4a4a]">{spacing.toFixed(2)}</span>
+      </div>
     </div>
   </div>
 );
@@ -516,6 +539,7 @@ function App() {
   const CHAT_TIMELINE = useMemo(() => buildTimeline(CHAT_ITEMS, fps), [fps]);
   const [previewFrame, setPreviewFrame] = useState(0);
   const [voiceWaveStrokeWidth, setVoiceWaveStrokeWidth] = useState(DEFAULT_VOICE_WAVE_STROKE_WIDTH);
+  const [voiceWaveSpacing, setVoiceWaveSpacing] = useState(DEFAULT_VOICE_WAVE_SPACING);
   const showVoiceWaveControl = remotionFrame === null && typeof window !== 'undefined';
   const appShellWidth = SCREEN_WIDTH + (showVoiceWaveControl ? VOICE_WAVE_CONTROL_GUTTER : 0);
 
@@ -556,7 +580,12 @@ function App() {
     >
       {showVoiceWaveControl ? (
         <div className="absolute z-20" style={{ left: VOICE_WAVE_CONTROL_LEFT, bottom: 28 }}>
-          <VoiceWaveControl value={voiceWaveStrokeWidth} onChange={setVoiceWaveStrokeWidth} />
+          <VoiceWaveControl 
+            strokeWidth={voiceWaveStrokeWidth} 
+            spacing={voiceWaveSpacing}
+            onStrokeWidthChange={setVoiceWaveStrokeWidth}
+            onSpacingChange={setVoiceWaveSpacing}
+          />
         </div>
       ) : null}
 
@@ -580,7 +609,7 @@ function App() {
           </div>
         </div>
 
-        <ChatComposer voiceWaveStrokeWidth={voiceWaveStrokeWidth} />
+        <ChatComposer voiceWaveStrokeWidth={voiceWaveStrokeWidth} voiceWaveSpacing={voiceWaveSpacing} />
       </div>
     </div>
   );
