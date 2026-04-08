@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WeChat UI Preview</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
   </head>
   <body class="m-0">
     <div id="root"></div>

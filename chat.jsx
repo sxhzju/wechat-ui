@@ -577,7 +577,7 @@ function App() {
       >
         <div
           ref={messageListRef}
-          className="absolute inset-0 z-0 overflow-y-auto"
+          className="absolute inset-0 z-0 overflow-y-auto hide-scrollbar"
           style={{
             paddingTop: HEADER_HEIGHT + 16,
             paddingBottom: COMPOSER_HEIGHT + 16,
