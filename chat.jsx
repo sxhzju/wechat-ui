@@ -26,6 +26,9 @@ const ROLE_CHAT_PARTNER = 'chatPartner';
 const SCREEN_WIDTH = 390;
 const SCREEN_HEIGHT = 845;
 const COMPOSER_HEIGHT = 82;
+const DEFAULT_VOICE_WAVE_STROKE_WIDTH = 0.35;
+const VOICE_WAVE_CONTROL_GUTTER = 176;
+const VOICE_WAVE_CONTROL_LEFT = 96;
 
 const CHAT_PARTICIPANTS = {
   [ROLE_SELF]: {
@@ -283,22 +286,39 @@ const ChatHeader = ({ chatPartnerName }) => {
   );
 };
 
-const ChatComposer = () => {
+const ChatComposer = ({ voiceWaveStrokeWidth }) => {
   const microphoneButton = (
-    <svg className="w-8 h-8 text-[#2f2f2f]" fill="none" viewBox="0 0 48 48">
+    <svg className="w-7 h-7 text-[#2f2f2f]" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" />
       <path
-        d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20Z"
+        d="m86.31 121.6 15.67-15.4c4.84 3.96 5.45 10.65 5.45 15.4 0 6.28-2.72 11.13-5.45 14.5l-15.67-14.5z"
+        fill="currentColor"
         stroke="currentColor"
-        strokeWidth="4"
-        strokeLinejoin="round"
-      />
-      <path d="M17 25.9a2 2 0 1 0 0-4a2 2 0 0 0 0 4" fill="currentColor" />
-      <path
-        d="M21.95 28.85A6.98 6.98 0 0 0 24 23.9a6.98 6.98 0 0 0-2.05-4.95m4.95 14.849a13.96 13.96 0 0 0 4.1-9.9c0-3.866-1.567-7.366-4.1-9.899"
-        stroke="currentColor"
-        strokeWidth="4"
+        strokeWidth={voiceWaveStrokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
+        transform="scale(0.096)"
+        vectorEffect="non-scaling-stroke"
+      />
+      <path
+        d="m118.4 89.46-7.13 7.6c7.63 8.02 10.51 16.19 10.51 24.68 0 10.03-4.84 19.14-10.51 25.17l7.5 7.34c9.95-10.28 13.1-21.51 13.1-32.51 0-12.89-5.92-25.13-13.47-32.28z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth={voiceWaveStrokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        transform="scale(0.096)"
+        vectorEffect="non-scaling-stroke"
+      />
+      <path
+        d="m135.4 71.21-7.54 7.9c11.83 12.62 18.09 25.51 18.09 42.5 0 15.55-7.01 31.37-17.89 43.71l7.54 6.4c13.49-13.96 20.9-30.11 20.9-50.11 0-18.7-7.62-36.59-21.1-50.4z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth={voiceWaveStrokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        transform="scale(0.096)"
+        vectorEffect="non-scaling-stroke"
       />
     </svg>
   );
@@ -346,6 +366,27 @@ const ChatComposer = () => {
     </div>
   );
 };
+
+const VoiceWaveControl = ({ value, onChange }) => (
+  <div className="rounded-2xl border border-white/80 bg-white/84 px-2 py-3 shadow-[0_8px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm">
+    <div className="flex flex-col items-center gap-2">
+      <span className="text-[11px] leading-none text-[#8a8a8a] whitespace-nowrap">波宽</span>
+      <div className="relative h-24 w-7 flex items-center justify-center">
+        <input
+          type="range"
+          min="0"
+          max="1.2"
+          step="0.05"
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value))}
+          aria-label="声波粗细"
+          className="absolute w-24 -rotate-90 accent-[#2f2f2f]"
+        />
+      </div>
+      <span className="min-w-[32px] text-center text-[11px] leading-none tabular-nums text-[#4a4a4a]">{value.toFixed(2)}</span>
+    </div>
+  </div>
+);
 
 const TimeStamp = ({ label }) => (
   <div className="text-center -mb-[6px]">
@@ -474,6 +515,9 @@ function App() {
 
   const CHAT_TIMELINE = useMemo(() => buildTimeline(CHAT_ITEMS, fps), [fps]);
   const [previewFrame, setPreviewFrame] = useState(0);
+  const [voiceWaveStrokeWidth, setVoiceWaveStrokeWidth] = useState(DEFAULT_VOICE_WAVE_STROKE_WIDTH);
+  const showVoiceWaveControl = remotionFrame === null && typeof window !== 'undefined';
+  const appShellWidth = SCREEN_WIDTH + (showVoiceWaveControl ? VOICE_WAVE_CONTROL_GUTTER : 0);
 
   useEffect(() => {
     if (remotionFrame !== null || typeof window === 'undefined') {
@@ -507,24 +551,37 @@ function App() {
 
   return (
     <div
-      className="mx-auto bg-[#ededed] font-sans text-gray-800 flex flex-col relative shadow-sm border-x border-gray-200 overflow-hidden"
-      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+      className="mx-auto relative"
+      style={{ width: appShellWidth, height: SCREEN_HEIGHT }}
     >
-      <ChatHeader chatPartnerName={CHAT_PARTNER_NAME} />
+      {showVoiceWaveControl ? (
+        <div className="absolute z-20" style={{ left: VOICE_WAVE_CONTROL_LEFT, bottom: 28 }}>
+          <VoiceWaveControl value={voiceWaveStrokeWidth} onChange={setVoiceWaveStrokeWidth} />
+        </div>
+      ) : null}
 
-      <div className="flex-1 p-4 space-y-6 overflow-y-auto">
-        {visibleItems.map((entry) => (
-          <ChatItem
-            key={`${entry.item.type}-${entry.originalIndex}`}
-            item={entry.item}
-            slot={CHAT_TIMELINE.messageTimeline.get(entry.originalIndex)}
-            currentFrame={currentFrame}
-            fps={fps}
-          />
-        ))}
+      <div
+        className="ml-auto bg-[#ededed] font-sans text-gray-800 flex flex-col relative shadow-sm border-x border-gray-200 overflow-hidden"
+        style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+      >
+        <ChatHeader chatPartnerName={CHAT_PARTNER_NAME} />
+
+        <div className="flex-1">
+          <div className="h-full p-4 space-y-6 overflow-y-auto">
+            {visibleItems.map((entry) => (
+              <ChatItem
+                key={`${entry.item.type}-${entry.originalIndex}`}
+                item={entry.item}
+                slot={CHAT_TIMELINE.messageTimeline.get(entry.originalIndex)}
+                currentFrame={currentFrame}
+                fps={fps}
+              />
+            ))}
+          </div>
+        </div>
+
+        <ChatComposer voiceWaveStrokeWidth={voiceWaveStrokeWidth} />
       </div>
-
-      <ChatComposer />
     </div>
   );
 }
