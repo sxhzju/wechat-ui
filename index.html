@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WeChat UI Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="m-0">
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel" data-presets="react" src="./chat.jsx"></script>
+    <script type="text/babel" data-presets="react">
+      const rootElement = document.getElementById('root');
+      if (!rootElement) {
+        throw new Error('Missing #root element for preview rendering.');
+      }
+
+      if (typeof ChatApp !== 'function') {
+        throw new Error('Missing ChatApp export on window.');
+      }
+
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(<ChatApp />);
+    </script>
+  </body>
+</html>

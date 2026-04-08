@@ -1,0 +1,447 @@
+const ReactRuntime = typeof React !== 'undefined' ? React : require('react');
+const { useEffect, useMemo, useRef, useState } = ReactRuntime;
+
+const remotionApi = (() => {
+  if (typeof require !== 'function') {
+    return null;
+  }
+
+  try {
+    return require('remotion');
+  } catch (error) {
+    return null;
+  }
+})();
+
+const DEFAULT_FPS = 30;
+const MESSAGE_GAP_SECONDS = 0.5;
+const POP_MOTION_SECONDS = 0.32;
+const STREAM_CHAR_SECONDS = 0.045;
+const STREAM_MIN_SECONDS = 0.4;
+const STREAM_MAX_SECONDS = 0.9;
+const STREAM_REVEAL_SECONDS = 0.14;
+const STREAM_SPEED_MULTIPLIER = 1.5;
+
+const PROFILES = {
+  maoXueZhang: {
+    name: '猫学长',
+    avatar: './assets/mxz-avatar.jpg',
+    avatarClass: 'shadow-sm object-cover'
+  },
+  longXia: {
+    name: '龙虾',
+    avatar: './assets/lobster-avatar.svg',
+    avatarClass: 'bg-white shadow-sm'
+  }
+};
+
+const CHAT_ITEMS = [
+  {
+    type: 'timestamp',
+    label: '14:30'
+  },
+  {
+    type: 'text',
+    from: 'maoXueZhang',
+    isSelf: true,
+    text: '生成视频：在claude code中打入提示词"vibe motion真好玩!"'
+  },
+  {
+    type: 'text',
+    from: 'longXia',
+    text: '我会用claude-typer这个技能来生成视频'
+  },
+  {
+    type: 'video',
+    from: 'longXia',
+    coverUrl: './assets/lobster-video-cover.jpg',
+    duration: '0:02',
+    orientation: 'square'
+  },
+  {
+    type: 'text',
+    from: 'longXia',
+    text: '视频已生成好，利用默认的720p渲染，如果你要，我可以再生成一个1080p的'
+  }
+];
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const easeOutBack = (value) => {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+
+  return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
+};
+
+const getMotionSeconds = (item) => {
+  if (item.from === 'longXia' && item.type === 'text') {
+    const charCount = Array.from(item.text || '').length;
+    const baseStreamSeconds = clamp(charCount * STREAM_CHAR_SECONDS, STREAM_MIN_SECONDS, STREAM_MAX_SECONDS);
+    return baseStreamSeconds / STREAM_SPEED_MULTIPLIER;
+  }
+
+  return POP_MOTION_SECONDS;
+};
+
+const buildTimeline = (items, fps) => {
+  let cursorFrame = 0;
+  const messageTimeline = new Map();
+  const messageIndices = [];
+
+  items.forEach((item, index) => {
+    if (item.type === 'timestamp') {
+      return;
+    }
+
+    const motionFrames = getMotionSeconds(item) * fps;
+    const startFrame = cursorFrame;
+    const endFrame = startFrame + motionFrames;
+
+    messageTimeline.set(index, {
+      startFrame,
+      endFrame,
+      motionFrames
+    });
+    messageIndices.push(index);
+    cursorFrame = endFrame + MESSAGE_GAP_SECONDS * fps;
+  });
+
+  const lastMessageIndex = messageIndices[messageIndices.length - 1];
+  const totalFrames = lastMessageIndex === undefined
+    ? 0
+    : messageTimeline.get(lastMessageIndex).endFrame;
+
+  return {
+    messageTimeline,
+    totalFrames
+  };
+};
+
+const getFrameProgress = (currentFrame, startFrame, durationFrames) => {
+  if (durationFrames <= 0) {
+    return currentFrame >= startFrame ? 1 : 0;
+  }
+
+  return clamp((currentFrame - startFrame) / durationFrames, 0, 1);
+};
+
+const VIDEO_DIMENSION_STRATEGY = {
+  square: 'w-[175px] aspect-square',
+  portrait: 'w-[175px] aspect-[9/16]',
+  landscape: 'w-[175px] aspect-video'
+};
+
+const WeChatVideoMessage = ({ coverUrl, duration, orientation = 'square' }) => {
+  const dimensions = VIDEO_DIMENSION_STRATEGY[orientation] || VIDEO_DIMENSION_STRATEGY.portrait;
+  const cardRef = useRef(null);
+  const playButtonRef = useRef(null);
+  const flashRef = useRef(null);
+
+  const runClickFeedback = () => {
+    const cardElement = cardRef.current;
+    const playButtonElement = playButtonRef.current;
+    const flashElement = flashRef.current;
+
+    if (cardElement?.animate) {
+      cardElement.animate(
+        [
+          { transform: 'scale(1)' },
+          { transform: 'scale(0.965)', offset: 0.35 },
+          { transform: 'scale(1.015)', offset: 0.72 },
+          { transform: 'scale(1)' }
+        ],
+        {
+          duration: 260,
+          easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+        }
+      );
+    }
+
+    if (playButtonElement?.animate) {
+      playButtonElement.animate(
+        [
+          { transform: 'scale(1)', opacity: 1 },
+          { transform: 'scale(0.86)', opacity: 0.85, offset: 0.35 },
+          { transform: 'scale(1.12)', opacity: 1, offset: 0.72 },
+          { transform: 'scale(1)', opacity: 1 }
+        ],
+        {
+          duration: 280,
+          easing: 'ease-out'
+        }
+      );
+    }
+
+    if (flashElement?.animate) {
+      flashElement.animate(
+        [
+          { opacity: 0 },
+          { opacity: 0.22, offset: 0.36 },
+          { opacity: 0 }
+        ],
+        {
+          duration: 240,
+          easing: 'ease-out'
+        }
+      );
+    }
+  };
+
+  const handleClick = (event) => {
+    event.preventDefault();
+    runClickFeedback();
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      runClickFeedback();
+    }
+  };
+
+  return (
+    <div
+      ref={cardRef}
+      className={`relative rounded overflow-hidden cursor-pointer select-none active:scale-[0.98] transition-transform duration-100 ${dimensions}`}
+      style={{ boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)' }}
+      role="button"
+      tabIndex={0}
+      aria-label="视频消息"
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+    >
+      <img
+        src={coverUrl}
+        alt="Video thumbnail"
+        className="w-full h-full object-contain bg-black"
+        draggable={false}
+      />
+
+      <div ref={flashRef} className="absolute inset-0 bg-white/70 opacity-0 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          ref={playButtonRef}
+          className={`
+            w-9 h-9 rounded-full flex items-center justify-center
+            border-[1px] border-white bg-transparent
+          `}
+          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }}
+        >
+          <svg className="w-5 h-5 text-white translate-x-[0.5px]" fill="currentColor" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}>
+            <path d="M8 5.14v14.72a1 1 0 001.5.86l11-7.36a1 1 0 000-1.72l-11-7.36a1 1 0 00-1.5.86z" />
+          </svg>
+        </div>
+      </div>
+
+      <div
+        className="absolute bottom-1.5 right-2 text-white text-xs font-medium tracking-wide"
+        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
+      >
+        {duration}
+      </div>
+    </div>
+  );
+};
+
+const TopBar = () => (
+  <div className="bg-[#ededed] border-b border-gray-300 px-4 py-3 flex items-center justify-between sticky top-0 z-10 relative">
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    <span className="absolute left-1/2 -translate-x-1/2 text-lg font-medium">猫学长的龙虾</span>
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+      />
+    </svg>
+  </div>
+);
+
+const TimeStamp = ({ label }) => (
+  <div className="text-center -mb-[6px]">
+    <span className="text-[13px] leading-[18px] text-[#9b9b9b] px-2 py-[3px] rounded">
+      {label}
+    </span>
+  </div>
+);
+
+const Avatar = ({ profile }) => (
+  <img
+    src={profile.avatar}
+    alt={profile.name}
+    className={`w-10 h-10 rounded shrink-0 ${profile.avatarClass}`}
+  />
+);
+
+const TextBubble = ({ text, isSelf = false, children = null }) => {
+  const bubbleClass = isSelf ? 'bg-[#95ec69]' : 'bg-white';
+  const tailClass = isSelf ? 'right-[-4px] bg-[#95ec69]' : 'left-[-4px] bg-white';
+
+  return (
+    <div className={`relative max-w-[250px] rounded-lg px-[10px] py-2 text-[14.5px] leading-6 text-gray-800 shadow-sm ${bubbleClass}`}>
+      {children || text}
+      <span className={`absolute top-3 h-2 w-2 rotate-45 ${tailClass}`} />
+    </div>
+  );
+};
+
+const MessageRow = ({ item, children }) => {
+  const profile = PROFILES[item.from];
+  const directionClass = item.isSelf ? 'flex-row-reverse' : '';
+  const alignClass = item.isSelf ? 'items-end' : '';
+
+  return (
+    <div className={`flex gap-3 max-w-full ${directionClass}`}>
+      <Avatar profile={profile} />
+      <div className={`flex flex-col gap-1 ${alignClass}`}>{children}</div>
+    </div>
+  );
+};
+
+const getPopStyle = (item, slot, currentFrame, fps) => {
+  const progress = getFrameProgress(currentFrame, slot.startFrame, POP_MOTION_SECONDS * fps);
+  const eased = easeOutBack(progress);
+  const baseScale = 0.86;
+  const scale = baseScale + (1 - baseScale) * eased;
+
+  return {
+    opacity: progress,
+    transform: `scale(${scale})`,
+    transformOrigin: item.isSelf ? 'right center' : 'left center'
+  };
+};
+
+const ChatItem = ({ item, slot, currentFrame, fps }) => {
+  if (item.type === 'timestamp') {
+    return <TimeStamp label={item.label} />;
+  }
+
+  if (!slot) {
+    return null;
+  }
+
+  if (item.from === 'longXia' && item.type === 'text') {
+    const progress = getFrameProgress(currentFrame, slot.startFrame, slot.motionFrames);
+    const textChars = Array.from(item.text || '');
+    const visibleCount = Math.floor(progress * textChars.length);
+    const visibleText = textChars.slice(0, visibleCount).join('');
+    const revealProgress = getFrameProgress(
+      currentFrame,
+      slot.startFrame,
+      (STREAM_REVEAL_SECONDS / STREAM_SPEED_MULTIPLIER) * fps
+    );
+
+    return (
+      <div
+        style={{
+          opacity: revealProgress,
+          transform: `translateY(${(1 - revealProgress) * 8}px)`
+        }}
+      >
+        <MessageRow item={item}>
+          <TextBubble isSelf={item.isSelf}>
+            <span>{visibleText}</span>
+          </TextBubble>
+        </MessageRow>
+      </div>
+    );
+  }
+
+  if (item.type === 'text') {
+    return (
+      <div style={getPopStyle(item, slot, currentFrame, fps)}>
+        <MessageRow item={item}>
+          <TextBubble text={item.text} isSelf={item.isSelf} />
+        </MessageRow>
+      </div>
+    );
+  }
+
+  if (item.type === 'video') {
+    return (
+      <div style={getPopStyle(item, slot, currentFrame, fps)}>
+        <MessageRow item={item}>
+          <WeChatVideoMessage
+            coverUrl={item.coverUrl}
+            duration={item.duration}
+            orientation={item.orientation}
+          />
+        </MessageRow>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+function App() {
+  const remotionFrame = remotionApi?.useCurrentFrame ? remotionApi.useCurrentFrame() : null;
+  const videoConfig = remotionApi?.useVideoConfig ? remotionApi.useVideoConfig() : null;
+  const fps = videoConfig?.fps || DEFAULT_FPS;
+
+  const CHAT_TIMELINE = useMemo(() => buildTimeline(CHAT_ITEMS, fps), [fps]);
+  const [previewFrame, setPreviewFrame] = useState(0);
+
+  useEffect(() => {
+    if (remotionFrame !== null || typeof window === 'undefined') {
+      return undefined;
+    }
+    if (previewFrame >= CHAT_TIMELINE.totalFrames) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setPreviewFrame((prev) => Math.min(prev + 1, CHAT_TIMELINE.totalFrames));
+    }, 1000 / fps);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [remotionFrame, previewFrame, CHAT_TIMELINE.totalFrames, fps]);
+
+  const currentFrame = remotionFrame !== null
+    ? Math.min(remotionFrame, CHAT_TIMELINE.totalFrames)
+    : previewFrame;
+
+  const visibleItems = CHAT_ITEMS
+    .map((item, index) => ({ item, originalIndex: index }))
+    .filter((entry) => {
+      if (entry.item.type === 'timestamp') {
+        return true;
+      }
+
+      const slot = CHAT_TIMELINE.messageTimeline.get(entry.originalIndex);
+      return slot ? currentFrame >= slot.startFrame : false;
+    });
+
+  return (
+    <div className="w-[390px] mx-auto min-h-screen bg-[#ededed] font-sans text-gray-800 flex flex-col relative shadow-sm border-x border-gray-200">
+      <TopBar />
+
+      <div className="flex-1 p-4 space-y-6 overflow-y-auto">
+        {visibleItems.map((entry) => (
+          <ChatItem
+            key={`${entry.item.type}-${entry.originalIndex}`}
+            item={entry.item}
+            slot={CHAT_TIMELINE.messageTimeline.get(entry.originalIndex)}
+            currentFrame={currentFrame}
+            fps={fps}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = App;
+  module.exports.default = App;
+}
+
+if (typeof window !== 'undefined') {
+  window.ChatApp = App;
+}
