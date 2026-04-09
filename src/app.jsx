@@ -19,19 +19,12 @@
   const { constants } = WechatUI;
 
   const getConfiguredChatItems = () => {
-    const chatConfig = WechatUI.getChatConfig ? WechatUI.getChatConfig() : WechatUI.chatConfig;
-    if (Array.isArray(chatConfig?.items)) {
-      return chatConfig.items.map((item) => ({ ...item }));
-    }
-
-    return WechatUI.getChatItems ? WechatUI.getChatItems() : [];
+    const chatConfig = WechatUI.getChatConfig();
+    return chatConfig.items.map((item) => ({ ...item }));
   };
 
   function App() {
-    const chatConfig =
-      (WechatUI.getChatConfig ? WechatUI.getChatConfig() : WechatUI.chatConfig) || {
-        chatPartnerName: ''
-      };
+    const chatConfig = WechatUI.getChatConfig();
     const remotionFrame = remotionApi?.useCurrentFrame ? remotionApi.useCurrentFrame() : null;
     const videoConfig = remotionApi?.useVideoConfig ? remotionApi.useVideoConfig() : null;
     const fps = videoConfig?.fps || constants.DEFAULT_FPS;
