@@ -5,6 +5,9 @@
   const root = typeof globalThis !== 'undefined' ? globalThis : window;
   const WechatUI = root.WechatUI || (root.WechatUI = {});
   const { constants, media, messageMotion } = WechatUI;
+  const PLAY_BUTTON_DIAMETER = 30;
+  const PLAY_ICON_SIZE = 20;
+  const PLAY_ICON_OFFSET_X = 0;
 
   const WeChatVideoCard = ({ coverUrl, duration, aspectRatio }) => {
     const safeAspectRatio =
@@ -108,14 +111,23 @@
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div
             ref={playButtonRef}
-            className="w-9 h-9 rounded-full flex items-center justify-center border-[1px] border-white bg-transparent"
-            style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }}
+            className="rounded-full flex items-center justify-center border-[1px] border-white bg-transparent"
+            style={{
+              width: PLAY_BUTTON_DIAMETER,
+              height: PLAY_BUTTON_DIAMETER,
+              boxShadow: '0 1px 4px rgba(0,0,0,0.15)'
+            }}
           >
             <svg
-              className="w-5 h-5 text-white translate-x-[0.5px]"
+              className="text-white"
               fill="currentColor"
               viewBox="0 0 24 24"
-              style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
+              style={{
+                width: PLAY_ICON_SIZE,
+                height: PLAY_ICON_SIZE,
+                transform: `translateX(${PLAY_ICON_OFFSET_X}px)`,
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))'
+              }}
             >
               <path d="M8 5.14v14.72a1 1 0 001.5.86l11-7.36a1 1 0 000-1.72l-11-7.36a1 1 0 00-1.5.86z" />
             </svg>
