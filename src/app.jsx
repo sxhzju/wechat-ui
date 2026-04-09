@@ -17,8 +17,15 @@
   const root = typeof globalThis !== 'undefined' ? globalThis : window;
   const WechatUI = root.WechatUI || (root.WechatUI = {});
   const { constants } = WechatUI;
-  const getConfiguredChatItems = () =>
-    (WechatUI.getChatItems ? WechatUI.getChatItems() : WechatUI.chatSeed?.chatItems) || [];
+
+  const getConfiguredChatItems = () => {
+    const chatConfig = WechatUI.getChatConfig ? WechatUI.getChatConfig() : WechatUI.chatConfig;
+    if (Array.isArray(chatConfig?.items)) {
+      return chatConfig.items.map((item) => ({ ...item }));
+    }
+
+    return WechatUI.getChatItems ? WechatUI.getChatItems() : [];
+  };
 
   function App() {
     const chatConfig =

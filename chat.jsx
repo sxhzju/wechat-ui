@@ -5,7 +5,6 @@
     require('./src/domain/message-motion.js');
     require('./src/domain/timeline.js');
     require('./src/domain/media.js');
-    require('./src/data/chat-seed.js');
     require('./src/data/chat-config.js');
 
     require('./src/components/layout/chat-header.jsx');

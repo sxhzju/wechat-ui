@@ -42,8 +42,11 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script>
       // Optional runtime overrides. Define these before loading app modules.
-      // window.CHAT_UI_CONFIG = { participants: { self: {...}, chatPartner: {...} }, chatPartnerName: '...' };
-      // window.CHAT_UI_ITEMS = [{ type: 'timestamp', label: '14:30' }, ...];
+      // window.CHAT_UI_CONFIG = {
+      //   participants: { self: {...}, chatPartner: {...} },
+      //   chatPartnerName: '...',
+      //   items: [{ type: 'timestamp', label: '14:30' }, ...]
+      // };
     </script>
 
     <script type="text/babel" data-presets="react" src="./src/core/constants.js"></script>
@@ -51,7 +54,6 @@
     <script type="text/babel" data-presets="react" src="./src/domain/message-motion.js"></script>
     <script type="text/babel" data-presets="react" src="./src/domain/timeline.js"></script>
     <script type="text/babel" data-presets="react" src="./src/domain/media.js"></script>
-    <script type="text/babel" data-presets="react" src="./src/data/chat-seed.js"></script>
     <script type="text/babel" data-presets="react" src="./src/data/chat-config.js"></script>
 
     <script type="text/babel" data-presets="react" src="./src/components/layout/chat-header.jsx"></script>
