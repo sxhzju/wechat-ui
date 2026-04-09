@@ -165,17 +165,73 @@ const getFrameProgress = (currentFrame, startFrame, durationFrames) => {
   return clamp((currentFrame - startFrame) / durationFrames, 0, 1);
 };
 
-const VIDEO_DIMENSION_STRATEGY = {
-  square: 'w-[175px] aspect-square',
-  portrait: 'w-[175px] aspect-[9/16]',
-  landscape: 'w-[175px] aspect-video'
+const WECHAT_MEDIA_WIDTH_RULE = {
+  min: 0.2778,
+  square: 0.3731,
+  max: 0.4991
+};
+
+const ORIENTATION_ASPECT_RATIO = {
+  portrait: 9 / 16,
+  square: 1,
+  landscape: 16 / 9
+};
+
+const WIDTH_ANCHORS = [
+  { aspect: 9 / 16, widthRatio: WECHAT_MEDIA_WIDTH_RULE.min },
+  { aspect: 3 / 4, widthRatio: WECHAT_MEDIA_WIDTH_RULE.square },
+  { aspect: 1, widthRatio: WECHAT_MEDIA_WIDTH_RULE.square },
+  { aspect: 4 / 3, widthRatio: WECHAT_MEDIA_WIDTH_RULE.max },
+  { aspect: 16 / 9, widthRatio: WECHAT_MEDIA_WIDTH_RULE.max }
+];
+
+const getMediaWidthRatio = (aspectRatio) => {
+  const minAspect = WIDTH_ANCHORS[0].aspect;
+  const maxAspect = WIDTH_ANCHORS[WIDTH_ANCHORS.length - 1].aspect;
+  if (aspectRatio < minAspect || aspectRatio > maxAspect) {
+    throw new Error(
+      `Unsupported media aspect ratio ${aspectRatio.toFixed(4)}. Supported range is ${minAspect.toFixed(4)}~${maxAspect.toFixed(4)}.`
+    );
+  }
+
+  for (let i = 0; i < WIDTH_ANCHORS.length - 1; i += 1) {
+    const left = WIDTH_ANCHORS[i];
+    const right = WIDTH_ANCHORS[i + 1];
+    if (aspectRatio > right.aspect) {
+      continue;
+    }
+
+    const segmentSpan = right.aspect - left.aspect;
+    if (segmentSpan === 0) {
+      return left.widthRatio;
+    }
+    const progress = (aspectRatio - left.aspect) / segmentSpan;
+    return left.widthRatio + (right.widthRatio - left.widthRatio) * progress;
+  }
+
+  return WIDTH_ANCHORS[WIDTH_ANCHORS.length - 1].widthRatio;
 };
 
 const WeChatVideoMessage = ({ coverUrl, duration, orientation = 'square' }) => {
-  const dimensions = VIDEO_DIMENSION_STRATEGY[orientation] || VIDEO_DIMENSION_STRATEGY.portrait;
+  const fallbackAspectRatio = ORIENTATION_ASPECT_RATIO[orientation] || ORIENTATION_ASPECT_RATIO.square;
+  const [resolvedAspectRatio, setResolvedAspectRatio] = useState(fallbackAspectRatio);
+  const widthRatio = getMediaWidthRatio(resolvedAspectRatio);
+  const cardWidth = Math.round(SCREEN_WIDTH * widthRatio);
   const cardRef = useRef(null);
   const playButtonRef = useRef(null);
   const flashRef = useRef(null);
+
+  const handleCoverLoad = (event) => {
+    const target = event.currentTarget;
+    const naturalWidth = target?.naturalWidth || 0;
+    const naturalHeight = target?.naturalHeight || 0;
+
+    if (naturalWidth <= 0 || naturalHeight <= 0) {
+      return;
+    }
+
+    setResolvedAspectRatio(naturalWidth / naturalHeight);
+  };
 
   const runClickFeedback = () => {
     const cardElement = cardRef.current;
@@ -242,8 +298,12 @@ const WeChatVideoMessage = ({ coverUrl, duration, orientation = 'square' }) => {
   return (
     <div
       ref={cardRef}
-      className={`relative rounded overflow-hidden cursor-pointer select-none active:scale-[0.98] transition-transform duration-100 ${dimensions}`}
-      style={{ boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)' }}
+      className="relative rounded overflow-hidden cursor-pointer select-none active:scale-[0.98] transition-transform duration-100"
+      style={{
+        width: cardWidth,
+        aspectRatio: resolvedAspectRatio,
+        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)'
+      }}
       role="button"
       tabIndex={0}
       aria-label="视频消息"
@@ -255,6 +315,7 @@ const WeChatVideoMessage = ({ coverUrl, duration, orientation = 'square' }) => {
         alt="Video thumbnail"
         className="w-full h-full object-contain bg-black"
         draggable={false}
+        onLoad={handleCoverLoad}
       />
 
       <div ref={flashRef} className="absolute inset-0 bg-white/70 opacity-0 pointer-events-none" />
