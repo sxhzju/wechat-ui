@@ -86,8 +86,7 @@
         className="relative rounded overflow-hidden cursor-pointer select-none active:scale-[0.98] transition-transform duration-100"
         style={{
           width: cardWidth,
-          aspectRatio: safeAspectRatio,
-          boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)'
+          aspectRatio: safeAspectRatio
         }}
         role="button"
         tabIndex={0}
@@ -98,7 +97,7 @@
         <img
           src={coverUrl}
           alt="Video thumbnail"
-          className="w-full h-full object-contain bg-black"
+          className="w-full h-full object-contain bg-transparent"
           draggable={false}
         />
 
