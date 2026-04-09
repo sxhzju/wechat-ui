@@ -1,14 +1,23 @@
 (() => {
   const root = typeof globalThis !== 'undefined' ? globalThis : window;
   const WechatUI = root.WechatUI || (root.WechatUI = {});
-  const { constants } = WechatUI;
+  const WECHAT_MEDIA_WIDTH_RULE = {
+    min: 0.2778,
+    square: 0.3731,
+    max: 0.4991
+  };
+  const ORIENTATION_ASPECT_RATIO = {
+    portrait: 9 / 16,
+    square: 1,
+    landscape: 16 / 9
+  };
 
   const WIDTH_ANCHORS = [
-    { aspect: 9 / 16, widthRatio: constants.WECHAT_MEDIA_WIDTH_RULE.min },
-    { aspect: 3 / 4, widthRatio: constants.WECHAT_MEDIA_WIDTH_RULE.square },
-    { aspect: 1, widthRatio: constants.WECHAT_MEDIA_WIDTH_RULE.square },
-    { aspect: 4 / 3, widthRatio: constants.WECHAT_MEDIA_WIDTH_RULE.max },
-    { aspect: 16 / 9, widthRatio: constants.WECHAT_MEDIA_WIDTH_RULE.max }
+    { aspect: 9 / 16, widthRatio: WECHAT_MEDIA_WIDTH_RULE.min },
+    { aspect: 3 / 4, widthRatio: WECHAT_MEDIA_WIDTH_RULE.square },
+    { aspect: 1, widthRatio: WECHAT_MEDIA_WIDTH_RULE.square },
+    { aspect: 4 / 3, widthRatio: WECHAT_MEDIA_WIDTH_RULE.max },
+    { aspect: 16 / 9, widthRatio: WECHAT_MEDIA_WIDTH_RULE.max }
   ];
 
   const aspectRatioPromiseCache = new Map();
@@ -19,8 +28,7 @@
     }
 
     return (
-      constants.ORIENTATION_ASPECT_RATIO[item.orientation] ||
-      constants.ORIENTATION_ASPECT_RATIO.square
+      ORIENTATION_ASPECT_RATIO[item.orientation] || ORIENTATION_ASPECT_RATIO.square
     );
   };
 
@@ -30,7 +38,7 @@
     const safeAspectRatio =
       typeof aspectRatio === 'number' && Number.isFinite(aspectRatio) && aspectRatio > 0
         ? aspectRatio
-        : constants.ORIENTATION_ASPECT_RATIO.square;
+        : ORIENTATION_ASPECT_RATIO.square;
     const normalizedAspectRatio = Math.min(Math.max(safeAspectRatio, minAspect), maxAspect);
 
     for (let i = 0; i < WIDTH_ANCHORS.length - 1; i += 1) {

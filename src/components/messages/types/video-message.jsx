@@ -9,11 +9,8 @@
   const PLAY_ICON_SIZE = 20;
   const PLAY_ICON_OFFSET_X = 0;
 
-  const WeChatVideoCard = ({ coverUrl, duration, aspectRatio }) => {
-    const safeAspectRatio =
-      typeof aspectRatio === 'number' && aspectRatio > 0
-        ? aspectRatio
-        : constants.ORIENTATION_ASPECT_RATIO.square;
+  const WeChatVideoCard = ({ coverUrl, duration, aspectRatio, orientation }) => {
+    const safeAspectRatio = media.getFallbackAspectRatio({ aspectRatio, orientation });
 
     const widthRatio = media.getMediaWidthRatio(safeAspectRatio);
     const cardWidth = Math.round(constants.SCREEN_WIDTH * widthRatio);
@@ -154,6 +151,7 @@
             coverUrl={item.coverUrl}
             duration={item.duration}
             aspectRatio={item.aspectRatio}
+            orientation={item.orientation}
           />
         </BaseMessage>
       </div>

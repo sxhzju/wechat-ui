@@ -21,17 +21,7 @@
     COMPOSER_HEIGHT: 82,
     MESSAGE_VIEWPORT_HEIGHT: 660,
     DEFAULT_VOICE_WAVE_STROKE_WIDTH: 0.55,
-    DEFAULT_VOICE_WAVE_SPACING: 1.03,
-    WECHAT_MEDIA_WIDTH_RULE: {
-      min: 0.2778,
-      square: 0.3731,
-      max: 0.4991
-    },
-    ORIENTATION_ASPECT_RATIO: {
-      portrait: 9 / 16,
-      square: 1,
-      landscape: 16 / 9
-    }
+    DEFAULT_VOICE_WAVE_SPACING: 1.03
   };
 
   WechatUI.constants.SCREEN_HEIGHT =
